@@ -1,0 +1,29 @@
+#!/bin/sh
+if test $# -lt 2; then echo "Usage: $0 confdir targetdir" 2>&1; exit 1; fi;
+
+confdir="$1";
+shift;
+targetdir="$1";
+shift;
+
+# note that exec FD opens are unconditionally fatal, but that doesn't matter here.
+conf=3;
+exec 3<"$confdir/interfaces"
+chains=4;
+exec 4>"$targetdir/base-chains.conf";
+jumps_in=5;
+exec 5>"$targetdir/jumps-in.conf";
+jumps_out=6;
+exec 6>"$targetdir/jumps-out.conf";
+
+while read ifname <&$conf; do {
+	echo "chain interface-input-$ifname {" >&$chains;
+	echo "	drop" >&$chains;
+	echo "}" >&$chains;
+	echo "chain interface-output-$ifname {" >&$chains;
+	echo "	drop" >&$chains;
+	echo "}" >&$chains;
+	
+	echo "iifname $ifname jump interface-input-$ifname;" >&$jumps_in;
+	echo "oifname $ifname jump interface-output-$ifname;" >&$jumps_out;
+}; done;

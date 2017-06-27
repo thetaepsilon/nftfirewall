@@ -1,0 +1,10 @@
+#!/bin/sh
+if test $# -lt 2; then echo "Usage: $0 confdir gendir" >&2; exit 1; fi;
+confdir="$1";
+gendir="$2";
+
+rm --interactive=never --recursive -- "$gendir/gen";
+mkdir -p "$gendir/gen/interfaces" || exit 4;
+
+gen-interface-skeletons "$confdir" "$gendir/gen/interfaces" || exit 16;
+gen-includes "chains" <"$confdir/include-chains" > "$gendir/gen/chain-includes.conf"

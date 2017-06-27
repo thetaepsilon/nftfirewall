@@ -1,0 +1,8 @@
+#!/bin/sh
+
+if test $# -lt 1; then echo "Usage: $0 basedir"; exit 1; fi;
+basedir="$1";
+
+while read chain; do {
+	echo "include \"$basedir/$chain.conf\"";
+}; done;
