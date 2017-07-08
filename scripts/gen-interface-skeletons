@@ -19,12 +19,12 @@ exec 6>"$targetdir/jumps-out.conf";
 while read ifname <&$conf; do {
 	echo "chain interface-input-$ifname {" >&$chains;
 	profile="$(cat $confdir/profiles/$ifname)" &&
-		echo "	include \"profiles/$ifname/input-$profile.conf\"" >&$chains;
+		echo "	include \"profiles/$ifname/$profile/input.conf\"" >&$chains;
 	echo "	drop" >&$chains;
 	echo "}" >&$chains;
 	echo "chain interface-output-$ifname {" >&$chains;
 	if test -n "$profile"; then echo \
-		"	include \"profiles/$ifname/output-$profile.conf\"" >&$chains; fi;
+		"	include \"profiles/$ifname/$profile/output.conf\"" >&$chains; fi;
 	echo "	drop" >&$chains;
 	echo "}" >&$chains;
 	
