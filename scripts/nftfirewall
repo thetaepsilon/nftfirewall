@@ -1,0 +1,24 @@
+#!/bin/sh
+name="$0";
+
+die() {
+	echo "$name: $1" >&2;
+	exit 1;
+}
+pathfail() {
+	die "Couldn't read path config: $1";
+}
+
+p="/etc/nftfirewall/paths";
+dist_dir=$(cat $p/dist) || pathfail "distribution files";
+export PATH="$PATH:$dist_dir/scripts";
+
+# try to generate the firewall before applying.
+# if this is called in a "network enable" script (e.g. the wifi one),
+# failure of this should be considered a blocker to bringing the network up.
+gentarget=$(cat $p/gentarget) || pathfail "generator target directory";
+profiledir=$(cat $p/profiles) || pathfail "profile configuration directory";
+runtimeconf=$(cat $p/runtimeconf) || pathfail "runtime configuration directory";
+nft-generator "$runtimeconf" "$profiledir" "$gentarget" || die "firewall generator failed, aborting";
+# then attempt to apply it
+exec nft -I "$gentarget" -I "$profiledir" -I "$dist_dir/defines" -I "$dist_dir/libchains" -f "$dist_dir/base.conf";
