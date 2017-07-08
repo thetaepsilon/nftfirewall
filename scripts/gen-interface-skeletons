@@ -20,11 +20,17 @@ while read ifname <&$conf; do {
 	echo "chain interface-input-$ifname {" >&$chains;
 	profile="$(cat $confdir/profiles/$ifname)" &&
 		echo "	include \"profiles/$ifname/$profile/input.conf\"" >&$chains;
+	if test -e "$confdir/iftoggles/$ifname/log-input"; then {
+		echo "	log prefix \"blocked incoming [$ifname]: \"" >&$chains;
+	}; fi;
 	echo "	drop" >&$chains;
 	echo "}" >&$chains;
 	echo "chain interface-output-$ifname {" >&$chains;
 	if test -n "$profile"; then echo \
 		"	include \"profiles/$ifname/$profile/output.conf\"" >&$chains; fi;
+	if test -e "$confdir/iftoggles/$ifname/log-output"; then {
+		echo "	log prefix \"blocked outgoing [$ifname]: \"" >&$chains;
+	}; fi;
 	echo "	drop" >&$chains;
 	echo "}" >&$chains;
 	
