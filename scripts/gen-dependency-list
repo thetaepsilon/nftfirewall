@@ -1,0 +1,11 @@
+#!/bin/sh
+if test $# -lt "1"; then echo "Usage: $0 confdir profile_read_dir" >&2; exit 1; fi;
+confdir="$1";
+profile_read_dir="$2";
+
+# note -r to avoid interpreting backslashes in input.
+# pipe into the usual sort | uniq trick.
+(while read -r ifname; do {
+	profile=$(cat "$confdir/profiles/$ifname");
+	cat "$profile_read_dir/$ifname/$profile/needed-chains";
+}; done) < "$confdir/interfaces" | sort | uniq;
