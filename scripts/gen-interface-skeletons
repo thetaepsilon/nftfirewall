@@ -31,7 +31,7 @@ while read ifname <&$conf; do {
 	if test -e "$confdir/iftoggles/$ifname/log-output"; then {
 		echo "	log prefix \"blocked outgoing [$ifname]: \"" >&$chains;
 	}; fi;
-	echo "	drop" >&$chains;
+	echo "	reject" >&$chains;
 	echo "}" >&$chains;
 	
 	echo "iifname $ifname jump interface-input-$ifname;" >&$jumps_in;
