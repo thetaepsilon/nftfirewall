@@ -8,32 +8,42 @@ shift;
 
 # note that exec FD opens are unconditionally fatal, but that doesn't matter here.
 conf=3;
-exec 3<"$confdir/interfaces"
+exec 3<"$confdir/interfaces" || exit 2;
 chains=4;
-exec 4>"$targetdir/base-chains.conf";
+exec 4>"$targetdir/base-chains.conf" || exit 2;
 jumps_in=5;
-exec 5>"$targetdir/jumps-in.conf";
+exec 5>"$targetdir/jumps-in.conf" || exit 2;
 jumps_out=6;
-exec 6>"$targetdir/jumps-out.conf";
+exec 6>"$targetdir/jumps-out.conf" || exit 2;
 
 while read ifname <&$conf; do {
 	echo "chain interface-input-$ifname {" >&$chains;
-	profile="$(cat $confdir/profiles/$ifname)" &&
-		echo "	include \"profiles/$ifname/$profile/input.conf\"" >&$chains;
+	# if no profile is present or can't be read, fail shut to no inclusion of the per-interface chain.
+	# this makes it possible to disable an interface by removing it's profile.
+	# also test for the file being blank, to match the output case below.
+	profile="$(cat $confdir/profiles/$ifname)" && {
+		if test -n "$profile"; then {
+			echo "	include \"profiles/$ifname/$profile/input.conf\"" >&$chains;
+		}; fi;
+	};
 	if test -e "$confdir/iftoggles/$ifname/log-input"; then {
 		echo "	log prefix \"blocked incoming [$ifname]: \"" >&$chains;
 	}; fi;
 	echo "	drop" >&$chains;
 	echo "}" >&$chains;
+	
+	# begin output chain generation
 	echo "chain interface-output-$ifname {" >&$chains;
-	if test -n "$profile"; then echo \
-		"	include \"profiles/$ifname/$profile/output.conf\"" >&$chains; fi;
+	if test -n "$profile"; then {
+		echo "	include \"profiles/$ifname/$profile/output.conf\"" >&$chains;
+	}; fi;
 	if test -e "$confdir/iftoggles/$ifname/log-output"; then {
 		echo "	log prefix \"blocked outgoing [$ifname]: \"" >&$chains;
 	}; fi;
 	echo "	reject" >&$chains;
 	echo "}" >&$chains;
 	
+	# generate jumps for each interface name
 	echo "iifname $ifname jump interface-input-$ifname;" >&$jumps_in;
 	echo "oifname $ifname jump interface-output-$ifname;" >&$jumps_out;
 }; done;
