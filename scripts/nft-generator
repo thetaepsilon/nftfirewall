@@ -4,9 +4,12 @@ confdir="$1";
 profiledir="$2";
 gendir="$3";
 
-rm --interactive=never --recursive -- "$gendir/gen";
+# this directory should have been set up by the init script.
+# if it doesn't exist, rm will complain, so we can check init has occurred first.
+rm --interactive=never --recursive -- "$gendir/gen" || exit 3;
 mkdir -p "$gendir/gen/interfaces" || exit 4;
 
 gen-interface-skeletons "$confdir" "$gendir/gen/interfaces" || exit 16;
 #gen-includes "chains" <"$confdir/include-chains" > "$gendir/gen/chain-includes.conf"
-gen-dependency-list "$confdir" "$profiledir/profiles" | gen-includes "chains" > "$gendir/gen/dependency-includes.conf";
+gen-dependency-list "$confdir" "$profiledir/profiles" > "$gendir/gen/dependency-list" || exit 17;
+gen-includes "chains" < "$gendir/gen/dependency-list" > "$gendir/gen/dependency-includes.conf" || exit 18;
