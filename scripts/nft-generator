@@ -9,4 +9,4 @@ mkdir -p "$gendir/gen/interfaces" || exit 4;
 
 gen-interface-skeletons "$confdir" "$gendir/gen/interfaces" || exit 16;
 #gen-includes "chains" <"$confdir/include-chains" > "$gendir/gen/chain-includes.conf"
-gen-dependency-list "$confdir" "$profiledir" | gen-includes "chains" > "$gendir/gen/dependency-includes.conf";
+gen-dependency-list "$confdir" "$profiledir/profiles" | gen-includes "chains" > "$gendir/gen/dependency-includes.conf";
