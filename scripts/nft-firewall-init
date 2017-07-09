@@ -48,7 +48,7 @@ if test -z "$runtimegroup"; then {
 # errors can be trapped from the copy call that follows it.
 mkdir -p -- "$runtimeconf";
 echo "Resetting runtime configuration...";
-rm -r -- $runtimeconf/* || die "unable to clean existing runtime configuration";
+rm -rf -- $runtimeconf/* || die "unable to clean existing runtime configuration";
 cp -r -- $defaultconf/* "$runtimeconf/" || die "copying initial configuration failed";
 chown -R -- "$runtimeowner:$runtimegroup" "$runtimeconf/" || die "applying runtime config ownership failed";
 # create gentarget directory to keep the generator script happy.
