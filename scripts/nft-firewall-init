@@ -26,6 +26,7 @@ nft -f "$dist_dir/initial.conf" || die "initial firewall configuration failed";
 runtimeconf=$(cat $p/runtimeconf) || pathfail "runtime configuration directory";
 defaultconf=$(cat $p/runtimeconf.default) || pathfail "runtime configuration defaults";
 globals=$(cat $p/globalcfg) || pathfail "global misc configuration directory";
+gentarget=$(cat "$p/gentarget") || pathfail "generation target directory";
 
 # user and group owner for the runtime configuration directory.
 # if reading fails (because e.g. it isn't set), fail gracefully to root ownership.
@@ -50,6 +51,8 @@ echo "Resetting runtime configuration...";
 rm -r -- $runtimeconf/* || die "unable to clean existing runtime configuration";
 cp -r -- $defaultconf/* "$runtimeconf/" || die "copying initial configuration failed";
 chown -R -- "$runtimeowner:$runtimegroup" "$runtimeconf/" || die "applying runtime config ownership failed";
+# create gentarget directory to keep the generator script happy.
+mkdir -p "$gentarget/gen" || die "unable to create generator target directory";
 
 # now try to apply firewall
 exec nftfirewall || die "nftfirewall exec failed";
