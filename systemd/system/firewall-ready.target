@@ -1,0 +1,10 @@
+# This target is used as a sync point for services that activate a network interface of some kind.
+# When they change the associated network profile for the interface,
+# they expect the firewall configuration to be ready so that this change is applied by nftfirewall.
+# Therefore they should require this target to be reached first.
+[Unit]
+Description=firewall ready for interface configuration
+Before=network-pre.target
+
+[Install]
+RequiredBy=network-pre.target

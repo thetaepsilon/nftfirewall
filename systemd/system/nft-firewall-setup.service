@@ -1,0 +1,12 @@
+[Unit]
+Description=set up NFT firewall
+Before=network-pre.target
+Before=firewall-ready.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/nft-firewall-init
+
+[Install]
+RequiredBy=firewall-ready.target
