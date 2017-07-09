@@ -1,0 +1,55 @@
+#!/bin/sh
+name="$0";
+
+die() {
+	echo "[abort] $name: $1" >&2;
+	exit 1;
+}
+pathfail() {
+	die "Couldn't read path config: $1";
+}
+warn() {
+	echo "[warning] $name: $1" >&2;
+}
+
+p="/etc/nftfirewall/paths";
+dist_dir=$(cat $p/dist) || pathfail "distribution files";
+
+# first, try to apply the base firewall.
+# abort if this can't be done; this will cause the init unit to fail to start (and in turn network.target).
+# any "network connection" services should prerequisite this service completing successfully.
+# failing to do so would potentially allow connection leaks when the firewall is not set up,
+# as the kernel default is to fail-open.
+nft -f "$dist_dir/initial.conf" || die "initial firewall configuration failed";
+
+# needed directories for setting up the default configuration.
+runtimeconf=$(cat $p/runtimeconf) || pathfail "runtime configuration directory";
+defaultconf=$(cat $p/runtimeconf.default) || pathfail "runtime configuration defaults";
+globals=$(cat $p/globalcfg) || pathfail "global misc configuration directory";
+
+# user and group owner for the runtime configuration directory.
+# if reading fails (because e.g. it isn't set), fail gracefully to root ownership.
+runtimeowner=$(cat "$globals/runtime-owner") || runtimeowner="0";
+runtimegroup=$(cat "$globals/runtime-group") || runtimegroup="0";
+# note that the config files being empty results in a spec of ":", which means "no change".
+# this means that the cp will end up creating the files as the user this script runs as.
+# it seems a bit strange that this would be intentional use, so override and warn if this happens.
+if test -z "$runtimeowner"; then {
+	warn "runtime owner file exists but is blank, assuming root";
+	runtimeowner="0";
+}; fi;
+if test -z "$runtimegroup"; then {
+	warn "runtime group file exists but is blank, assuming root";
+	runtimegroup=0;
+}; fi;
+
+# ignore errors from mkdir in case the directory already exists (such as re-init for debugging).
+# errors can be trapped from the copy call that follows it.
+mkdir -p -- "$runtimeconf";
+echo "Resetting runtime configuration...";
+rm -r -- $runtimeconf/* || die "unable to clean existing runtime configuration";
+cp -r -- $defaultconf/* "$runtimeconf/" || die "copying initial configuration failed";
+chown -R -- "$runtimeowner:$runtimegroup" "$runtimeconf/" || die "applying runtime config ownership failed";
+
+# now try to apply firewall
+exec nftfirewall || die "nftfirewall exec failed";
