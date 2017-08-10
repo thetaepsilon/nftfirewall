@@ -1,0 +1,7 @@
+[Unit]
+Description=reload NFT firewall
+
+[Service]
+Type=oneshot
+RemainAfterExit=no
+ExecStart=/usr/local/bin/nftfirewall
