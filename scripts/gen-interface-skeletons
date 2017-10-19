@@ -38,7 +38,7 @@ while read ifname <&$conf; do {
 		echo "	include \"profiles/$ifname/$profile/output.conf\"" >&$chains;
 	}; fi;
 	if test -e "$confdir/iftoggles/$ifname/log-output"; then {
-		echo "	log prefix \"blocked outgoing [$ifname]: \"" >&$chains;
+		echo "	log flags skuid prefix \"blocked outgoing [$ifname]: \"" >&$chains;
 	}; fi;
 	echo "	reject" >&$chains;
 	echo "}" >&$chains;
