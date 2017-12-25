@@ -17,7 +17,7 @@ jumps_out=6;
 exec 6>"$targetdir/jumps-out.conf" || exit 2;
 
 while read ifname <&$conf; do {
-	echo "chain interface-input-$ifname {" >&$chains;
+	echo "chain ifin-$ifname {" >&$chains;
 	# if no profile is present or can't be read, fail shut to no inclusion of the per-interface chain.
 	# this makes it possible to disable an interface by removing it's profile.
 	# also test for the file being blank, to match the output case below.
@@ -33,7 +33,7 @@ while read ifname <&$conf; do {
 	echo "}" >&$chains;
 	
 	# begin output chain generation
-	echo "chain interface-output-$ifname {" >&$chains;
+	echo "chain ifout-$ifname {" >&$chains;
 	if test -n "$profile"; then {
 		echo "	include \"profiles/$ifname/$profile/output.conf\"" >&$chains;
 	}; fi;
@@ -44,6 +44,6 @@ while read ifname <&$conf; do {
 	echo "}" >&$chains;
 	
 	# generate jumps for each interface name
-	echo "iifname $ifname jump interface-input-$ifname;" >&$jumps_in;
-	echo "oifname $ifname jump interface-output-$ifname;" >&$jumps_out;
+	echo "iifname $ifname jump ifin-$ifname;" >&$jumps_in;
+	echo "oifname $ifname jump ifout-$ifname;" >&$jumps_out;
 }; done;
